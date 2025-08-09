@@ -1,0 +1,14 @@
+{
+  "name": "@lyrics/mono",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "dependencies": {
+    "turbo": "^2.5.5"
+  }
+}
