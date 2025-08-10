@@ -73,7 +73,7 @@ export const POST = async (req: NextRequest) => {
     const response = await client.chat.completions.create(
       {
         messages,
-        model: "gpt-5-nano",
+        model: "gpt-5",
         reasoning_effort: "minimal",
         verbosity: "low",
       },

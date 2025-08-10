@@ -5,8 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface InspirationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (inspiration: string) => void;
+  onSave: (inspiration: string) => Promise<void>;
   currentInspiration?: string;
+  isLoading?: boolean;
 }
 
 export function InspirationModal({
@@ -14,6 +15,7 @@ export function InspirationModal({
   onClose,
   onSave,
   currentInspiration = "",
+  isLoading = false,
 }: InspirationModalProps) {
   const [inspiration, setInspiration] = useState(currentInspiration);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -28,8 +30,8 @@ export function InspirationModal({
     }
   }, [isOpen]);
 
-  const handleSave = useCallback(() => {
-    onSave(inspiration);
+  const handleSave = useCallback(async () => {
+    await onSave(inspiration);
     onClose();
   }, [inspiration, onSave, onClose]);
 
@@ -37,12 +39,12 @@ export function InspirationModal({
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
-      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !isLoading) {
         e.preventDefault();
         handleSave();
       }
     },
-    [onClose, handleSave]
+    [onClose, handleSave, isLoading]
   );
 
   const handleBackdropClick = useCallback(
@@ -92,9 +94,10 @@ export function InspirationModal({
           </button>
           <button
             onClick={handleSave}
-            className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background hover:bg-foreground/90"
+            disabled={isLoading}
+            className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save
+            {isLoading ? "Enhancing..." : "Save"}
           </button>
         </div>
 

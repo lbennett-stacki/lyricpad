@@ -25,6 +25,7 @@ export default function Home() {
   const { textareaRef } = useTextareaAutosize(content);
   const [suggestion, setSuggestion] = useState<string>("");
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
+  const [isLoadingInspiration, setIsLoadingInspiration] = useState(false);
   const [isInspirationModalOpen, setIsInspirationModalOpen] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -80,6 +81,37 @@ export default function Home() {
       }
     },
     [inspiration]
+  );
+
+  const fetchInspirationContext = useCallback(
+    async (inspirationText: string) => {
+      setIsLoadingInspiration(true);
+      try {
+        const response = await fetch("/api/inspiration", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            inspiration: inspirationText,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data.suggestion; // This contains the enhanced inspiration with lyrics
+        } else {
+          console.error("Failed to fetch inspiration context");
+          return inspirationText; // Return original inspiration if API fails
+        }
+      } catch (error) {
+        console.error("Error fetching inspiration context:", error);
+        return inspirationText; // Return original inspiration if API fails
+      } finally {
+        setIsLoadingInspiration(false);
+      }
+    },
+    []
   );
 
   const acceptSuggestion = useCallback(() => {
@@ -169,17 +201,22 @@ export default function Home() {
   }, []);
 
   const handleInspirationSave = useCallback(
-    (newInspiration: string) => {
-      setInspiration(newInspiration);
+    async (newInspiration: string) => {
+      if (newInspiration.trim()) {
+        const enhancedInspiration = await fetchInspirationContext(
+          newInspiration
+        );
+        setInspiration(newInspiration + "\n\n" + enhancedInspiration);
+      }
     },
-    [setInspiration]
+    [setInspiration, fetchInspirationContext]
   );
 
   useEffect(() => {
-    if (!content && !suggestion) {
+    if (!content && !suggestion && inspiration) {
       fetchSuggestion("");
     }
-  }, [content, suggestion, fetchSuggestion]);
+  }, [content, suggestion, fetchSuggestion, inspiration]);
 
   useEffect(() => {
     if (inspiration) {
@@ -267,6 +304,7 @@ export default function Home() {
         onClose={() => setIsInspirationModalOpen(false)}
         onSave={handleInspirationSave}
         currentInspiration={inspiration}
+        isLoading={isLoadingInspiration}
       />
     </div>
   );
